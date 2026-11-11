@@ -22,14 +22,16 @@
   --accent: var(--lilac-300);
   --border: #2b2a4a;
   --focus-ring: var(--lilac-300);
+  --danger: #ff8a9a;
+  --danger-border: #5a2a3a;
 
   --radius: 18px;
   --tap: 52px;
   color-scheme: dark;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
+/* Tema claro: escolhido em Ajustes, ou seguindo o sistema quando o tema é "Sistema". */
+:root[data-theme='light'] {
     --bg: #f7f6ff;
     --surface: var(--white);
     --surface-2: var(--lilac-100);
@@ -39,6 +41,23 @@
     --accent: #6b4fd8;
     --border: #dcd6f5;
     --focus-ring: var(--blue-600);
+    --danger: #b3261e;
+    --danger-border: #f2c4c0;
+    color-scheme: light;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']):not([data-theme='light']) {
+    --bg: #f7f6ff;
+    --surface: var(--white);
+    --surface-2: var(--lilac-100);
+    --text: var(--black);
+    --muted: #4d4a6b;
+    --primary: var(--blue-600);
+    --accent: #6b4fd8;
+    --border: #dcd6f5;
+    --focus-ring: var(--blue-600);
+    --danger: #b3261e;
+    --danger-border: #f2c4c0;
     color-scheme: light;
   }
 }
@@ -47,6 +66,7 @@
 html, body, #root { height: 100%; }
 body {
   margin: 0;
+  transition: background-color .2s ease, color .2s ease;
   background: var(--bg);
   color: var(--text);
   font-family: 'Atkinson Hyperlegible', system-ui, sans-serif;
@@ -140,7 +160,7 @@ p { margin: 0 0 .75rem; }
 .btn.primary { background: var(--primary); color: var(--primary-text); }
 .btn.lilac { background: var(--lilac-300); color: var(--black); }
 .btn.ghost { background: transparent; color: var(--text); border-color: var(--border); }
-.btn.danger { background: transparent; color: #ff8a9a; border-color: #5a2a3a; }
+.btn.danger { background: transparent; color: var(--danger); border-color: var(--danger-border); }
 .btn.block { width: 100%; }
 .btn:disabled { opacity: .5; cursor: default; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -216,3 +236,17 @@ input:focus, select:focus { border-color: var(--primary); outline: none; }
   animation: pop .28s cubic-bezier(.2, .9, .3, 1.2);
 }
 @keyframes pop { from { opacity: 0; transform: scale(.92) translateY(12px); } }
+
+/* ---------- Seletor de tema ---------- */
+.segmented { display: flex; gap: 6px; background: var(--surface-2); padding: 4px; border-radius: 14px; }
+.segmented button {
+  flex: 1; min-height: 46px; border: 0; border-radius: 10px;
+  background: transparent; color: var(--muted); font: inherit; font-size: .95rem; font-weight: 700; cursor: pointer;
+  white-space: nowrap; padding: 0 6px;
+}
+.segmented button[aria-pressed='true'] { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(0, 0, 0, .15); }
+.icon-btn {
+  margin-left: auto; width: 48px; height: 48px; border-radius: 14px;
+  border: 2px solid var(--border); background: var(--surface); color: var(--text);
+  font-size: 1.3rem; cursor: pointer;
+}

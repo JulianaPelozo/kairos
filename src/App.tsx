@@ -9,6 +9,7 @@ import { Tasks } from './screens/Tasks'
 import { Care } from './screens/Care'
 import { Settings } from './screens/Settings'
 import { ReminderPopup } from './components/ReminderPopup'
+import { useApplyTheme } from './lib/theme'
 
 type Tab = 'agora' | 'tarefas' | 'cuidados' | 'ajustes'
 type Overlay = null | 'triagem'
@@ -23,6 +24,7 @@ const TABS: { id: Tab; label: string; ico: string }[] = [
 function Shell() {
   const { state } = useStore()
   const now = useNow()
+  useApplyTheme(state.settings.theme)
   const [tab, setTab] = useState<Tab>('agora')
   const [overlay, setOverlay] = useState<Overlay>(null)
   const [addingTask, setAddingTask] = useState(false)

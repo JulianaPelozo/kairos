@@ -42,7 +42,7 @@ export function initialState(): AppState {
     tasks: [],
     triage: null,
     focus: null,
-    settings: { notifications: true, focusLimitMin: 120, windDownMin: 45 },
+    settings: { theme: 'sistema', notifications: true, focusLimitMin: 120, windDownMin: 45 },
     snoozed: {},
     updatedAt: Date.now(),
   }

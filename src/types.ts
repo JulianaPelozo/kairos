@@ -51,7 +51,10 @@ export interface Focus {
   startedAt: number
 }
 
+export type Theme = 'sistema' | 'claro' | 'escuro'
+
 export interface Settings {
+  theme: Theme
   notifications: boolean
   /** Depois de quantos minutos de foco contínuo o app puxa uma pausa. */
   focusLimitMin: number

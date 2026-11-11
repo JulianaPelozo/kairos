@@ -3,6 +3,7 @@ import { useCareDone } from '../state/hooks'
 import { prioritize } from '../engine/priority'
 import { formatDuration } from '../engine/time'
 import type { Suggestion } from '../types'
+import { resolveTheme } from '../lib/theme'
 
 function greeting(now: number) {
   const h = new Date(now).getHours()
@@ -33,6 +34,7 @@ export function Now({ now, onTriage }: { now: number; onTriage: () => void }) {
           <div className="greet">{greeting(now)}{state.profile.name ? `, ${state.profile.name}` : ''}.</div>
           <div className="muted small">Um passo de cada vez.</div>
         </div>
+        <ThemeToggle />
       </header>
 
       {focusTask && (
@@ -99,5 +101,17 @@ export function Now({ now, onTriage }: { now: number; onTriage: () => void }) {
         <button className="btn ghost block" onClick={onTriage}>Refazer triagem</button>
       )}
     </div>
+  )
+}
+
+function ThemeToggle() {
+  const { state, dispatch } = useStore()
+  const current = resolveTheme(state.settings.theme)
+  const next = current === 'escuro' ? 'claro' : 'escuro'
+  return (
+    <button className="icon-btn" aria-label={`Mudar para modo ${next}`} title={`Modo ${next}`}
+      onClick={() => dispatch({ type: 'settings', patch: { theme: next } })}>
+      {current === 'escuro' ? '☀️' : '🌙'}
+    </button>
   )
 }

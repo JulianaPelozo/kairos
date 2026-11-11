@@ -8,6 +8,12 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
     <title>Kairós</title>
+    <script>
+      try {
+        var t = JSON.parse(localStorage.getItem('kairos:v1') || '{}').settings?.theme
+        if (t === 'claro' || t === 'escuro') document.documentElement.dataset.theme = t === 'escuro' ? 'dark' : 'light'
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

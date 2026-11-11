@@ -37,6 +37,19 @@ export function Settings() {
       </section>
 
       <section className="card">
+        <h2>Aparência</h2>
+        <div className="segmented" role="group" aria-label="Tema">
+          {([['sistema', '🖥️ Sistema'], ['claro', '☀️ Claro'], ['escuro', '🌙 Escuro']] as const).map(([id, label]) => (
+            <button key={id} aria-pressed={settings.theme === id}
+              onClick={() => dispatch({ type: 'settings', patch: { theme: id } })}>{label}</button>
+          ))}
+        </div>
+        <p className="muted small" style={{ marginTop: 8, marginBottom: 0 }}>
+          “Sistema” acompanha o modo do seu celular ou computador.
+        </p>
+      </section>
+
+      <section className="card">
         <h2>Lembretes</h2>
         <label className="switch">
           <span>Notificações</span>
