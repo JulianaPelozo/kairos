@@ -8,6 +8,7 @@ import { Now } from './screens/Now'
 import { Tasks } from './screens/Tasks'
 import { Care } from './screens/Care'
 import { Settings } from './screens/Settings'
+import { ReminderPopup } from './components/ReminderPopup'
 
 type Tab = 'agora' | 'tarefas' | 'cuidados' | 'ajustes'
 type Overlay = null | 'triagem'
@@ -50,6 +51,7 @@ function Shell() {
       {tab === 'tarefas' && <Tasks key={String(addingTask)} startOpen={addingTask} />}
       {tab === 'cuidados' && <Care now={now} />}
       {tab === 'ajustes' && <Settings />}
+      <ReminderPopup />
 
       <nav className="tabbar" aria-label="Navegação principal">
         <div className="tabbar-inner">

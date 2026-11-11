@@ -1,6 +1,6 @@
 // Service worker do Kairós (versão web): deixa o app instalável e funcionando offline.
 // Estratégia: rede primeiro para páginas (pega atualizações), cache primeiro para arquivos com hash.
-const CACHE = 'kairos-v1'
+const CACHE = 'kairos-v2'
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/logo.webp']
 
 self.addEventListener('install', (e) => {
@@ -38,10 +38,19 @@ self.addEventListener('fetch', (e) => {
   )
 })
 
-// Tocar na notificação abre/foca o app.
+// Toque na notificação ou nos botões "Feito" / "Mais tarde".
 self.addEventListener('notificationclick', (e) => {
   e.notification.close()
-  e.waitUntil(
-    self.clients.matchAll({ type: 'window' }).then((list) => list[0]?.focus() ?? self.clients.openWindow('./')),
-  )
+  const key = e.notification.data?.key
+  const action = e.action // '' quando tocou no corpo da notificação
+  e.waitUntil((async () => {
+    const list = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+    if (list.length) {
+      if (key && action) list.forEach((c) => c.postMessage({ type: 'kairos-action', key, action }))
+      if (!action) return list[0].focus()
+      return
+    }
+    const url = key && action ? `./?acao=${action}&chave=${encodeURIComponent(key)}` : './'
+    return self.clients.openWindow(url)
+  })())
 })

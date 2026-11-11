@@ -60,6 +60,12 @@ class KairosNotifierPlugin : Plugin() {
     }
 
     @PluginMethod
+    fun openSettings(call: PluginCall) {
+        context.startActivity(Notifications.settingsIntent(context))
+        call.resolve()
+    }
+
+    @PluginMethod
     fun consumeActions(call: PluginCall) {
         val actions = ReminderStore.drainActions(context)
         call.resolve(JSObject().put("actions", JSArray(actions.toString())))

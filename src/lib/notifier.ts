@@ -14,6 +14,8 @@ interface KairosNotifierPlugin {
   cancelAll(): Promise<void>
   /** Ações tocadas na notificação enquanto o app estava fechado. */
   consumeActions(): Promise<{ actions: NotificationAction[] }>
+  /** Abre as configurações do canal de lembretes (para ligar o pop-up/flutuante). */
+  openSettings(): Promise<void>
 }
 
 /** Período de sono, para o nativo não reagendar lembretes de madrugada. */
@@ -26,10 +28,24 @@ export const isNative = Capacitor.isNativePlatform()
 let webTimers: number[] = []
 
 async function showWeb(title: string, body: string, tag: string) {
-  const opts = { body, tag, icon: './icons/icon-192.png', badge: './icons/favicon.png' }
+  // Com o app aberto e em foco, quem avisa é o pop-up dentro do app (ReminderPopup).
+  if (document.visibilityState === 'visible' && document.hasFocus()) return
+  const opts = {
+    body, tag,
+    icon: './icons/icon-192.png',
+    badge: './icons/favicon.png',
+    requireInteraction: true, // fica na tela até a pessoa responder
+    renotify: true,
+    data: { key: tag },
+    actions: [
+      { action: 'done', title: 'Feito ✓' },
+      { action: 'snooze', title: 'Mais tarde' },
+    ],
+  } as NotificationOptions
   const reg = await navigator.serviceWorker?.getRegistration().catch(() => undefined)
   if (reg) return reg.showNotification(title, opts)
-  new Notification(title, opts)
+  const { actions: _a, ...plain } = opts as NotificationOptions & { actions?: unknown }
+  new Notification(title, plain)
 }
 
 export const notifier = {
@@ -57,6 +73,10 @@ export const notifier = {
     if (isNative) return Native.cancelAll()
     webTimers.forEach(clearTimeout)
     webTimers = []
+  },
+
+  async openSettings() {
+    if (isNative) await Native.openSettings()
   },
 
   async consumeActions(): Promise<NotificationAction[]> {

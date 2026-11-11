@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../state/store'
 import { useSession } from '../state/session'
-import { notifier } from '../lib/notifier'
+import { isNative, notifier } from '../lib/notifier'
 import { sendCode, supabase, verifyCode } from '../lib/supabase'
 import { formatDuration } from '../engine/time'
 
@@ -42,6 +42,17 @@ export function Settings() {
           <span>Notificações</span>
           <input type="checkbox" checked={settings.notifications} onChange={(e) => toggleNotifications(e.target.checked)} />
         </label>
+        {isNative && settings.notifications && (
+          <>
+            <p className="muted small">
+              Os lembretes aparecem em pop-up no topo da tela. Se não estiverem aparecendo, ligue
+              <strong> “Pop-up”</strong> ou <strong>“Notificações flutuantes”</strong> nas configurações do celular.
+            </p>
+            <button className="btn ghost block" style={{ marginBottom: 14 }} onClick={() => notifier.openSettings()}>
+              Abrir configurações de notificação
+            </button>
+          </>
+        )}
         <label className="field">
           <span>Pedir uma pausa depois de quanto tempo em foco?</span>
           <select value={settings.focusLimitMin} onChange={(e) => dispatch({ type: 'settings', patch: { focusLimitMin: Number(e.target.value) } })}>

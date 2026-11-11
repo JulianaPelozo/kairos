@@ -46,24 +46,62 @@ export function useReminderSync() {
   }, [care, tasks, profile, settings, snoozed])
 }
 
-/** Aplica o que a pessoa tocou nas notificações ("Feito" / "Mais tarde") com o app fechado. */
-export function useNotificationActions() {
+export type ReminderAction = 'done' | 'snooze'
+
+/**
+ * Aplica "Feito" / "Mais tarde" vindo de qualquer lugar: notificação nativa,
+ * notificação do navegador ou o pop-up dentro do app.
+ * Chaves: "care:agua", "care:medicacao:08:00", "task:<id>:start", "task:<id>:due", "special:...".
+ */
+export function useApplyReminderAction() {
   const { dispatch } = useStore()
   const done = useCareDone()
+  return useCallback(
+    (key: string, action: ReminderAction, at = Date.now(), source: 'app' | 'notificacao' = 'notificacao') => {
+      const [kind, id, extra] = key.split(':')
+      if (action === 'snooze') {
+        dispatch({ type: 'snooze', key: `${kind}:${id}`, minutes: 30 })
+        return
+      }
+      if (kind === 'care') done(id, at, source)
+      else if (kind === 'task' && extra === 'start') dispatch({ type: 'focus:start', taskId: id })
+      else if (kind === 'task' && extra === 'due') dispatch({ type: 'task:update', id, patch: { done: true } })
+    },
+    [dispatch, done],
+  )
+}
+
+/** Aplica o que a pessoa tocou nas notificações, inclusive com o app fechado. */
+export function useNotificationActions() {
+  const apply = useApplyReminderAction()
 
   useEffect(() => {
+    // Android: ações guardadas pelo Kotlin enquanto o app estava fechado.
     const consume = async () => {
       const actions = await notifier.consumeActions().catch(() => [])
-      for (const a of actions) {
-        // chaves: "care:agua", "care:medicacao:08:00", "task:<id>:start"...
-        const [kind, id] = a.key.split(':')
-        if (a.action === 'done' && kind === 'care') done(id, a.at, 'notificacao')
-        if (a.action === 'snooze') dispatch({ type: 'snooze', key: `${kind}:${id}`, minutes: 30 })
-      }
+      for (const a of actions) apply(a.key, a.action, a.at)
     }
     consume()
-    if (!isNative) return
-    const sub = CapApp.addListener('appStateChange', ({ isActive }) => isActive && consume())
-    return () => { sub.then((s) => s.remove()) }
-  }, [dispatch, done])
+
+    // Navegador: o service worker abriu o app com ?acao=done&chave=... na URL.
+    const params = new URLSearchParams(location.search)
+    const acao = params.get('acao')
+    const chave = params.get('chave')
+    if ((acao === 'done' || acao === 'snooze') && chave) {
+      apply(chave, acao)
+      history.replaceState(null, '', location.pathname)
+    }
+
+    // Navegador: botão tocado com o app já aberto.
+    const onMessage = (e: MessageEvent) => {
+      if (e.data?.type === 'kairos-action') apply(e.data.key, e.data.action)
+    }
+    navigator.serviceWorker?.addEventListener('message', onMessage)
+
+    const sub = isNative ? CapApp.addListener('appStateChange', ({ isActive }) => isActive && consume()) : null
+    return () => {
+      navigator.serviceWorker?.removeEventListener('message', onMessage)
+      sub?.then((s) => s.remove())
+    }
+  }, [apply])
 }
