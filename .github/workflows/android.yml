@@ -1,0 +1,71 @@
+name: Android (APK)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write # para publicar o APK em Releases
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    env:
+      VERSION_CODE: ${{ github.run_number }}
+      VERSION_NAME: 0.1.${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - uses: android-actions/setup-android@v3
+
+      - run: npm ci
+      - run: npm test
+
+      - name: Build web + sincronizar com o Android
+        run: npm run build && npx cap sync android
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Restaurar chave de assinatura
+        run: echo "${{ secrets.KAIROS_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/kairos.jks"
+
+      - name: Compilar APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon
+        env:
+          KAIROS_KEYSTORE: ${{ runner.temp }}/kairos.jks
+          KAIROS_KEYSTORE_PASSWORD: ${{ secrets.KAIROS_KEYSTORE_PASSWORD }}
+          KAIROS_KEY_ALIAS: kairos
+          KAIROS_KEY_PASSWORD: ${{ secrets.KAIROS_KEYSTORE_PASSWORD }}
+
+      - name: Renomear
+        run: cp android/app/build/outputs/apk/release/app-release.apk "kairos-${VERSION_NAME}.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kairos-apk
+          path: kairos-*.apk
+
+      - name: Publicar em Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION_NAME }}
+          name: Kairós ${{ env.VERSION_NAME }}
+          body: |
+            APK para Android. Baixe `kairos-${{ env.VERSION_NAME }}.apk` no celular e abra para instalar
+            (permita "instalar apps de fontes desconhecidas" quando o Android pedir).
+          files: kairos-*.apk
+          make_latest: true

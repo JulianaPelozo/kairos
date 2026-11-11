@@ -25,6 +25,13 @@ export const isNative = Capacitor.isNativePlatform()
 // ---- Fallback para navegador (desenvolvimento): só funciona com a aba aberta ----
 let webTimers: number[] = []
 
+async function showWeb(title: string, body: string, tag: string) {
+  const opts = { body, tag, icon: './icons/icon-192.png', badge: './icons/favicon.png' }
+  const reg = await navigator.serviceWorker?.getRegistration().catch(() => undefined)
+  if (reg) return reg.showNotification(title, opts)
+  new Notification(title, opts)
+}
+
 export const notifier = {
   async requestPermission(): Promise<boolean> {
     if (isNative) return (await Native.requestPermission()).granted
@@ -41,7 +48,7 @@ export const notifier = {
     for (const r of reminders) {
       const delay = r.at - now
       if (delay > 0 && delay < 2 ** 31 - 1) {
-        webTimers.push(window.setTimeout(() => new Notification(r.title, { body: r.body, icon: './icons/icon-192.png', tag: r.key }), delay))
+        webTimers.push(window.setTimeout(() => showWeb(r.title, r.body, r.key), delay))
       }
     }
   },
