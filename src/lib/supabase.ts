@@ -1,7 +1,11 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { AppState } from '../types'
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
+// Aceita a URL mesmo se copiada com "/rest/v1/" ou barra no final: o cliente acrescenta os caminhos sozinho.
+const url = (import.meta.env.VITE_SUPABASE_URL as string | undefined)
+  ?.trim()
+  .replace(/\/(rest|auth)\/v1\/?$/, '')
+  .replace(/\/+$/, '')
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 
 /** null quando o app roda sem Supabase configurado (modo só local). */
